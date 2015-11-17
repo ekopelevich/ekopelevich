@@ -81,39 +81,85 @@ function cursorToPointer() {
 }
 
 function hoverEffect() {
-  $( '.week-unit' ).hover(function() {
+  $( '.week-unit' ).hover( function() {
     $( this ).fadeOut( 100 );
     $( this ).fadeIn( 500 );
   });
+}
+
+function checkEventsInLocalStorage() {
+
+  for ( var key in localStorage ) {
+    for (var i = 0; i < 5200; i++) {
+      if( key == i ){
+        $( "#" + i ).addClass( 'red' );
+      }
+    }
+  }
 }
 
 //End init functions on grid page
 
 //get Form Data
 
-$( '#event-submit' ).click( function() {
-  var address = $( '.event-address' ).val();
-  //getAddress( address );
-  setEventInfo();
-  return address;
-
-});
-
-function weekClickListener() {
-  console.log( 'weekClickListener' );
-  $( '.week-unit' ).click( function() {
-    if ($( this ).hasClass( 'blue' )){
-      $( this ).removeClass( 'blue' );
-      $( '.info-popup').hide();
-    } else {
-      $( this ).addClass( 'blue' );
-      $( this ).children().last().show();
-      $( '.info-popup' ).show();
-    }
+function eventSubmitListener() {
+  $( '#event-submit' ).click( function() {
+    var address = $( '.event-address' ).val();
+    getAddress( address );
+    setEventInfo();
+    return address;
   });
 }
 
-function attachEvent(weeksDiff, eventInfo) {
+function weekClickListener() {
+  var currentEvent = {},
+      parsedDate,
+      parsedTitle,
+      parsedDesc;
+
+  $( '.week-unit' ).click( function() {
+
+    // Check if the week has an associated event
+    if ($( this ).hasClass( 'red' )){
+      console.log('Something happened this week');
+    } else if ( ( $( this ).attr( 'id' ) ) > key1) {
+      console.log('Stop.');
+    } else {
+      console.log('Nothing happened this week.');
+    }
+
+    // Loop through localStorage to compare keys to this
+    for ( var key in localStorage ) {
+      if ( $( this ).attr( 'id' ) == key ) {
+        // Assign variables to display
+        currentEvent = JSON.parse( localStorage.getItem( key ) );
+        parsedDate = currentEvent.date;
+        parsedTitle = currentEvent.title;
+        parsedDesc = currentEvent.description;
+    }
+  }
+
+    console.log( currentEvent, parsedDate, parsedTitle, parsedDesc );
+    console.log(this);
+    console.log( key );
+
+    // Clear out .event-info if there is anything in it and re-show it
+    $('.event-info').empty();
+    $('.event-info').hide();
+    $('.event-info').append( currentEvent );
+    $('.event-info').show();
+
+    // Append info to .event-info
+    $( '.event-info' ).append
+      ('<div class="event-info"><h4>' +
+      parsedDate + '</h4><h3>' +
+      parsedTitle + '</h3><p>' +
+      parsedDesc + '</p></div>');
+
+  });
+}
+
+function getLifeEvent(weeksDiff, eventInfo) {
 
   for (var i = 0; i < 5201; i++) {
     var parsedInfo,
@@ -122,16 +168,13 @@ function attachEvent(weeksDiff, eventInfo) {
         parsedDescription;
 
     if( i === weeksDiff ){
-      parsedInfo = JSON.parse(localStorage.getItem(i));
+      parsedInfo = JSON.parse( localStorage.getItem( i ) );
       parsedDate = parsedInfo.date;
       parsedTitle = parsedInfo.title;
       parsedDescription = parsedInfo.description;
       console.log( parsedDate, parsedTitle, parsedDescription );
-      $('.week-unit[id=' + i + ']').append //How do I place this in the 'details-box'?
-        ('<div class="info-popup"><h4>' +
-        parsedDate + '</h4><h3>' +
-        parsedTitle + '</h3><p>' +
-        parsedDescription + '</p></div>');
+
+
     } else if ( i > weeksDiff) {
       return null;
     }
@@ -139,17 +182,26 @@ function attachEvent(weeksDiff, eventInfo) {
 
 }
 
-function checkDate(date, eventInfo) {
-  var birthdayMS = new Date(localStorage.getItem( 'birthday' )).getTime();
-  var eventDateMS = new Date(date).getTime();
+function checkDate( date, eventInfo ) {
+  var birthdayMS = new Date( localStorage.getItem( 'birthday' ) ).getTime();
+  var eventDateMS = new Date( date ).getTime();
   var msToDayFactor = 86400000;
   var daysInWeek = 7;
-  var weeksDiff = Math.ceil((eventDateMS - birthdayMS) / msToDayFactor / daysInWeek);
+  var weeksDiff = Math.ceil( ( eventDateMS - birthdayMS ) / msToDayFactor / daysInWeek );
 
-  console.log(eventDateMS, birthdayMS, weeksDiff);
+  console.log( eventDateMS, birthdayMS, weeksDiff );
   localStorage.setItem( weeksDiff, JSON.stringify( eventInfo ) );
 
-  attachEvent(weeksDiff, eventInfo);
+  getLifeEvent(weeksDiff, eventInfo);
+
+  for( var i = 0; i < 5200; i++ ){
+    if( weeksDiff === i ) {
+      console.log('eventLogged');
+      $( "#" + i ).addClass( 'red' );
+    } else if ( weeksDiff < i ) {
+      return null;
+    }
+  }
 }
 
 function setEventInfo() {
@@ -168,86 +220,90 @@ function setEventInfo() {
 
 // Map Functionality
 
-//   var map = new google.maps.Map( document.getElementById( 'map' ), {
-//     center: { lat: 39.7675, lng: -105.0200 },
-//     zoom: 15,
-//     mapTypeId: google.maps.MapTypeId.ROADMAP
-//   });
-//
-//   console.log(google.maps.LatLng);
-//
-// function eventListener() {
-//
-//   $( '#event-submit' ).click( function() {
-//     var address = $( '.event-address' ).val();
-//     getAddress( address );
-//     //getAddressAddPin( address );
-//   });
-// }
-//
-// function getAddress( address ) {
-//
-//   console.log( address + " gotAddressAgain");
-//
-//   var mapsAPI = 'https://maps.googleapis.com/maps/api/geocode/json?address=';
-//
-//   var defferedMap = $.get( mapsAPI + address);
-//
-//   defferedMap.done(function( data ) {
-//     localStorage.setItem( 'defferedMap', JSON.stringify(data) );
-//     adjustMapCenter(map, data.results[0].geometry.location);
-//     console.log( data );
-//   });
-//
-//   defferedMap.fail(function( data ) {
-//     console.log( 'Failed');
-//   });
-// }
-//
-// function adjustMapCenter( map, location ) {
-//   var myLatLng = location;
-//
-//   var mapOptions = {
-//     center: myLatLng,
-//     zoom: 15,
-//     mapTypeId: google.maps.MapTypeId.ROADMAP
-//   };
-//
-//   map.setOptions(mapOptions);
-// }
+function adjustMapCenter( map, location ) {
+  var myLatLng = location;
 
-// function getAddressAddPin( address ) {
+  var mapOptions = {
+    center: myLatLng,
+    zoom: 15,
+    mapTypeId: google.maps.MapTypeId.ROADMAP
+  };
+
+  map.setOptions(mapOptions);
+}
+
+function getAddress( address ) {
+
+  console.log( address + " gotAddressAgain");
+
+  var mapsAPI = 'https://maps.googleapis.com/maps/api/geocode/json?address=';
+
+  var defferedMap = $.get( mapsAPI + address);
+
+  defferedMap.done(function( data ) {
+    localStorage.setItem( 'defferedMap', JSON.stringify(data) );
+    adjustMapCenter(map, data.results[0].geometry.location);
+    console.log( data );
+  });
+
+  defferedMap.fail(function( data ) {
+    console.log( 'Failed');
+  });
+}
+
+function mapEventListener() {
+
+  $( '#event-submit' ).click( function() {
+    var address = $( '.event-address' ).val();
+    console.log( address );
+    AddPin( address );
+  });
+}
+
+function initMap() {
+
+  var map = new google.maps.Map( document.getElementById( 'map' ), {
+    center: { lat: 39.7675, lng: -105.0200 },
+    zoom: 15,
+    mapTypeId: google.maps.MapTypeId.ROADMAP
+  });
+
+  console.log(google.maps.LatLng);
+
+}
+
+// function AddPin( deferredPin, data ) {
 //
-//   console.log( address );
-//
-//   var mapsAPI = 'https://maps.googleapis.com/maps/api/geocode/json?address=';
-//
-//   var defferedPin = $.get( mapsAPI + address);
+//   console.log( deferredPin );
 //
 //   defferedPin.done(function( data ) {
 //     localStorage.setItem( 'deferredPin', JSON.stringify(data) );
 //     placePin(map, data.results[0].geometry.location);
 //     console.log( data );
-// });
+//   });
 //
-// defferedPin.fail(function( data ) {
-//   console.log( 'Failed');
-// });
+//   defferedPin.fail(function( data ) {
+//     console.log( 'Failed');
+//   });
 // }
 
 // function placePin( map, location ) {
-// var myLatLng = location;
+//   var myLatLng = location;
 //
-// var marker = new google.maps.Marker({
-//     position: myLatLng,
-//     map: map,
-//     title: 'This is where it happened'
-//   });
+//   var marker = new google.maps.Marker({
+//       position: myLatLng,
+//       map: map,
+//       title: 'This is where it happened'
+//     });
 //
-// console.log( marker.position );
-// console.log( myLatLng );
-// console.log( marker.title );
+//   console.log( marker.position );
+//   console.log( myLatLng );
+//   console.log( marker.title );
 // }
+
+
+
+
 
 //Map functions end
 
@@ -260,8 +316,11 @@ function init () {
   cursorToPointer();
   hoverEffect();
   displayPersonalInfo();
+  eventSubmitListener();
   weekClickListener();
-  // eventListener();
+  checkEventsInLocalStorage();
+  initMap();
+  mapEventListener();
 }
 //Grid Page Scripts Start
 
