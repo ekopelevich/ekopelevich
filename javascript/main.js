@@ -142,6 +142,7 @@ function checkEventsInLocalStorage() {
 function eventSubmitListener() {
   $( '#event-submit' ).click( function() {
     setEventInfo();
+    validateForm();
   });
 }
 
@@ -176,15 +177,12 @@ function weekClickListener() {
           parsedDesc + '</p><p>' +
           parsedAddress + '</p><div id="map"></div></div>');
     } else {
-      $( '.event-info' ).append('No events this week.');
-      $( '.event-info' ).append('<img src="../images/sad-cat.jpg">');
+      $( '.event-info' ).append( 'No events this week.' );
+      $( '.event-info' ).append( '<img src="../images/sad-cat.jpg">' );
     }
     console.log( parsedAddress );
     initMap();
     getLatLng( map, parsedAddress );
-
-    // console.log( location );
-    // adjustMapCenter( map, location );
   });
 }
 
@@ -227,9 +225,16 @@ function checkDate( date, eventInfo ) {
   var daysInWeek = 7;
   var weeksDiff = Math.ceil( ( eventDateMS - birthdayMS ) / msToDayFactor / daysInWeek );
 
+  // Fix for events added on day of birth
+  if (weeksDiff === 0) {
+    weeksDiff = 1;
+   }
+
   localStorage.setItem( weeksDiff, JSON.stringify( eventInfo ) );
   getLifeEvent( weeksDiff, eventInfo );
   fillSquare( weeksDiff, eventInfo );
+
+
 }
 
 function setEventInfo() {
@@ -244,6 +249,20 @@ function setEventInfo() {
   checkDate( eventInfo.date, eventInfo );
 }
 
+// Form validation attempt - not working - may remove
+function validateForm() {
+  var temp = $('.event-title').val();
+  var tempLength = $('.event-title').val().length;
+
+  console.log( temp );
+  console.log( tempLength );
+
+  if( tempLength < 3 ) {
+    console.log('event title is too short');
+    $('.event-title').append('<p>Your name longer than that!</p>');
+  }
+}
+
 function init () {
   //Index initial function invocations
   initialSubmit();
@@ -255,7 +274,6 @@ function init () {
   eventSubmitListener();
   weekClickListener();
   checkEventsInLocalStorage();
-  //initMap();
 }
 
 $(document).ready(init());
